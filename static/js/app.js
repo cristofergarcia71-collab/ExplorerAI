@@ -1,12 +1,12 @@
 let mapa;
-let marcadores = [];
+let marcadores = new Array();
 let marcadorUsuario = null;
 let miLat = null;
 let miLon = null;
 
 // Función auxiliar para calcular distancias en metros (Fórmula de Haversine)
 function calcularDistancia(lat1, lon1, lat2, lon2) {
-    const R = 6371e3; // Radio de la Tierra en metros
+    const R = 6371000; // Radio de la Tierra en metros
     const phi1 = lat1 * Math.PI / 180;
     const phi2 = lat2 * Math.PI / 180;
     const deltaPhi = (lat2 - lat1) * Math.PI / 180;
@@ -26,7 +26,8 @@ window.onload = function () {
             miLat = pos.coords.latitude;
             miLon = pos.coords.longitude;
 
-            mapa = L.map("map").setView([miLat, miLon], 15);
+            const centroInicial = new Array(miLat, miLon);
+            mapa = L.map("map").setView(centroInicial, 15);
 
             L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
                 maxZoom: 19,
@@ -34,7 +35,7 @@ window.onload = function () {
             }).addTo(mapa);
 
             // Marcador del usuario (Círculo azul brillante)
-            marcadorUsuario = L.circleMarker([miLat, miLon], {
+            marcadorUsuario = L.circleMarker(centroInicial, {
                 radius: 10,
                 color: "#ffffff",
                 weight: 2,
@@ -57,7 +58,7 @@ function generarAnomalias() {
             miLon = pos.coords.longitude;
 
             if (marcadorUsuario) {
-                marcadorUsuario.setLatLng([miLat, miLon]);
+                marcadorUsuario.setLatLng(new Array(miLat, miLon));
             }
 
             fetch("/generar", {
@@ -69,16 +70,17 @@ function generarAnomalias() {
                     intencion: document.getElementById("intencion").value
                 })
             })
-            .then(response => response.json())
-            .then(datos => {
+            .then(function(res) { return res.json(); })
+            .then(function(datos) {
                 // Limpiar marcadores antiguos correctamente
-                marcadores.forEach(marker => mapa.removeLayer(marker));
-                marcadores = [];
+                marcadores.forEach(function(marker) { mapa.removeLayer(marker); });
+                marcadores = new Array();
 
                 // Guardaremos las posiciones para ajustar el zoom automáticamente
-                let puntosCoordenadas = [[miLat, miLon]];
+                let puntosCoordenadas = new Array();
+                puntosCoordenadas.push(new Array(miLat, miLon));
 
-                datos.forEach(p => {
+                datos.forEach(function(p) {
                     // Colores y tamaños según el porcentaje de rareza
                     let colorAnomalica = "#00ff55"; // Común (Verde)
                     let radioAnomalica = 8;
@@ -92,8 +94,9 @@ function generarAnomalias() {
                     }
 
                     const distancia = calcularDistancia(miLat, miLon, p.lat, p.lon);
+                    const posAnomalia = new Array(p.lat, p.lon);
 
-                    const marker = L.circleMarker([p.lat, p.lon], {
+                    const marker = L.circleMarker(posAnomalia, {
                         radius: radioAnomalica,
                         color: "#ffffff",
                         weight: 1.5,
@@ -102,26 +105,24 @@ function generarAnomalias() {
                     }).addTo(mapa);
 
                     // Popup con el enlace corregido a Google Maps externo
-                    marker.bindPopup(`
-                        <b>✨ ${p.tipo}</b><br>
-                        🎯 Rareza: ${p.rareza}%<br>
-                        计量 Distancia: ${distancia} metros<br>
-                        <small>Lat: ${p.lat}, Lon: ${p.lon}</small><br><br>
-                        <a href="https://google.com{p.lat},${p.lon}" target="_blank" style="display:inline-block; margin-top:5px; color:#00aaff;">
-                            Abrir en Google Maps
-                        </a>
-                    `);
+                    marker.bindPopup(
+                        "<b>✨ " + p.tipo + "</b><br>" +
+                        "🎯 Rareza: " + p.rareza + "%<br>" +
+                        "📏 Distancia: " + distancia + " metros<br>" +
+                        "<small>Lat: " + p.lat + ", Lon: " + p.lon + "</small><br><br>" +
+                        "<a href='https://google.com" + p.lat + "," + p.lon + "' target='_blank' style='display:inline-block; margin-top:5px; color:#00aaff;'>Abrir en Google Maps</a>"
+                    );
 
                     marcadores.push(marker);
-                    puntosCoordenadas.push([p.lat, p.lon]);
+                    puntosCoordenadas.push(posAnomalia);
                 });
 
                 // Zoom automático para englobar todas las anomalías generadas en Calella
                 if (puntosCoordenadas.length > 1) {
-                    mapa.fitBounds(puntosCoordenadas, { padding: [30, 30] });
+                    mapa.fitBounds(puntosCoordenadas, { padding: new Array(50, 50) });
                 }
             })
-            .catch(err => console.error("Error al generar anomalías:", err));
+            .catch(function(err) { console.error("Error al generar anomalías:", err); });
         },
         { enableHighAccuracy: true }
     );
@@ -129,29 +130,26 @@ function generarAnomalias() {
 
 function cargarHallazgos() {
     fetch("/hallazgos")
-    .then(response => response.json())
-    .then(datos => {
+    .then(function(res) { return res.json(); })
+    .then(function(datos) {
         let html = "";
-        datos.forEach(h => {
-            // Mapeo adaptado tanto si tu backend devuelve una lista [] o un objeto {}
+        datos.forEach(function(h) {
             let titulo = h.titulo || (Array.isArray(h) ? h[1] : "Hallazgo");
             let desc = h.descripcion || (Array.isArray(h) ? h[2] : "");
             let rareza = h.rareza || (Array.isArray(h) ? h[5] : "??");
             let tipo = h.tipo || (Array.isArray(h) ? h[6] : "");
 
-            html += `
-                <div class="card">
-                    <h3>${titulo}</h3>
-                    <p>${desc}</p>
-                    <p>Rareza: ${rareza}%</p>
-                    <p>Tipo: ${tipo}</p>
-                </div>
-            `;
+            html += '<div class="card">' +
+                    '<h3>' + titulo + '</h3>' +
+                    '<p>' + desc + '</p>' +
+                    '<p>Rareza: ' + rareza + '%</p>' +
+                    '<p>Tipo: ' + tipo + '</p>' +
+                '</div>';
         });
 
         const diario = document.getElementById("diario");
         diario.style.display = diario.style.display === "block" ? "none" : "block";
         diario.innerHTML = html;
     })
-    .catch(err => console.error("Error al cargar hallazgos:", err));
+    .catch(function(err) { console.error("Error al cargar hallazgos:", err); });
 }
