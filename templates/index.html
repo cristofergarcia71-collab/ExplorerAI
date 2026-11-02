@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ExplorerAI</title>
-    <!-- Hojas de estilo de Leaflet para el mapa -->
+    <!-- Hojas de estilo de Leaflet fijadas -->
     <link rel="stylesheet" href="https://unpkg.com" />
     <style>
         body {
@@ -14,7 +14,6 @@
             color: #ffffff;
         }
 
-        /* Panel superior de la interfaz */
         header {
             background-color: #111b21;
             padding: 15px 20px;
@@ -37,7 +36,6 @@
             color: #aebac1;
         }
 
-        /* Controles de la aplicación */
         .controles {
             display: flex;
             flex-wrap: wrap;
@@ -61,7 +59,6 @@
             border-color: #00ffaa;
         }
 
-        /* Nuevo bloque del filtro de radio */
         .filtro-rango {
             display: flex;
             align-items: center;
@@ -103,14 +100,13 @@
             background-color: #00cc88;
         }
 
-        /* Estructura del mapa */
         #map {
             width: 100%;
             height: calc(100vh - 150px);
             min-height: 400px;
+            background-color: #111b21;
         }
 
-        /* Ventana emergente del diario de hallazgos */
         #diario {
             display: none;
             background-color: #111b21;
@@ -129,7 +125,6 @@
             border-left: 5px solid #00ffaa;
         }
 
-        /* Estilos personalizados para ajustar Leaflet al tema oscuro */
         .leaflet-popup-content-wrapper {
             background-color: #111b21 !important;
             color: #fff !important;
@@ -151,31 +146,24 @@
         </div>
 
         <div class="controles">
-            <!-- Entrada de intenciones de aventura -->
             <input type="text" id="intencion" placeholder="misterio, bosque, aventura...">
 
-            <!-- NUEVO: Selector de radio dinámico -->
             <div class="filtro-rango">
                 <label for="radio-filtro">Radio: </label>
                 <input type="range" id="radio-filtro" min="100" max="2000" step="100" value="500">
                 <span id="valor-radio">500m</span>
             </div>
 
-            <!-- Botones de control principales -->
             <button onclick="generarAnomalias()">Generar Anomalías</button>
             <button class="btn-diario" onclick="cargarHallazgos()">Diario</button>
         </div>
     </header>
 
-    <!-- Contenedor dinámico donde se inyecta el mapa interactivo -->
     <div id="map"></div>
-
-    <!-- Panel inferior oculto del Diario de expediciones -->
     <div id="diario"></div>
 
-    <!-- Scripts externos necesarios de la librería Leaflet -->
+    <!-- Scripts de Leaflet fijados sin recortar -->
     <script src="https://unpkg.com"></script>
-    <!-- Vinculación limpia con tu lógica de JavaScript -->
     <script src="/static/js/app.js"></script>
 
 </body>
