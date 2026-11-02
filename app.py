@@ -1,288 +1,93 @@
-from flask import Flask, render_template, jsonify, request
 import random
-import math
-import sqlite3
-
-from database import init_db
+from flask import Flask, request, jsonify, render_template
 
 app = Flask(__name__)
 
-init_db()
+# Base de datos simulada en memoria (puedes cambiarla por SQLite/PostgreSQL si lo deseas)
+HALLAZGOS_DB = [
+    # Formato: [id, titulo, descripcion, lat, lon, rareza, tipo]
+    [1, "Resonancia Magnética", "Una distorsión en el campo detectada cerca del faro.", 41.6120, 2.6520, 96, "Anomalía Legendaria"],
+    [2, "Foco Lumínico", "Energía residual flotando sobre la vegetación.", 41.6150, 2.6450, 65, "Anomalía Común"]
+]
 
+def obtener_tipo_y_rareza():
+    # Determinar rareza aleatoria de 1 a 100
+    rareza = random.randint(1, 100)
+    if rareza >= 95:
+        tipo = "Anomalía Legendaria"
+    elif rareza >= 80:
+        tipo = "Anomalía Rara"
+    else:
+        tipo = "Anomalía Común"
+    return tipo, rareza
 
 @app.route("/")
-def inicio():
+def index():
+    # Retorna tu plantilla HTML principal
     return render_template("index.html")
-
 
 @app.route("/generar", methods=["POST"])
 def generar():
+    datos = request.get_json()
+    if not datos:
+        return jsonify([]), 400
+        
+    lat = float(datos.get("lat"))
+    lon = float(datos.get("lon"))
+    intencion = datos.get("intencion", "")
 
-    data = request.json
+    anomalias = []
+    
+    # Limitamos los intentos para evitar bucles infinitos en el servidor
+    for _ in range(20):
+        if len(anomalias) >= 4:
+            break
+            
+        # Generar una variación controlada a la redonda (aprox. radio de 500m)
+        nueva_lat = lat + random.uniform(-0.005, 0.005)
+        nueva_lon = lon + random.uniform(-0.005, 0.005)
+        
+        # Filtro anti-mar adaptado a la costa de Calella
+        # Si aumenta demasiado la longitud (hacia el este/sureste), nos metemos en el agua.
+        if nueva_lon > lon + 0.0035:
+            continue
 
-    lat = float(data["lat"])
-    lon = float(data["lon"])
-
-    intencion = data.get("intencion", "").lower()
-
-    tipos = [
-        "Anomalía Energética",
-        "Eco Temporal",
-        "Ruina Oculta",
-        "Bosque Extraño",
-        "Evento Inusual",
-        "Punto Curioso",
-        "Zona Inexplorada",
-        "Anomalía Cuántica",
-        "Objeto Perdido",
-        "Lugar Desconocido"
-    ]
-
-    if "naturaleza" in intencion:
-        tipos.extend([
-            "Bosque Antiguo",
-            "Sendero Perdido",
-            "Mirador Secreto"
-        ])
-
-    elif "misterio" in intencion:
-        tipos.extend([
-            "Eco Temporal",
-            "Ruina Oculta",
-            "Anomalía Cuántica"
-        ])
-
-    resultados = []
-
-    for _ in range(5):
-
-        rareza = random.randint(1, 100)
-
-        if rareza >= 95:
-
-            distancia = random.uniform(3, 8)
-
-            tipo = "Anomalía Cuántica"
-
-        elif rareza >= 80:
-
-            distancia = random.uniform(1, 5)
-
-            tipo = random.choice([
-                "Eco Temporal",
-                "Ruina Oculta",
-                "Evento Inusual"
-            ])
-
-        else:
-
-            distancia = random.uniform(
-                0.3,
-                2
-            )
-
-            tipo = random.choice(tipos)
-
-        angulo = random.uniform(
-            0,
-            360
-        )
-
-        nueva_lat = lat + (
-            distancia / 111
-        ) * math.cos(
-            math.radians(
-                angulo
-            )
-        )
-
-        nueva_lon = lon + (
-            distancia /
-            (
-                111 *
-                math.cos(
-                    math.radians(
-                        lat
-                    )
-                )
-            )
-        ) * math.sin(
-            math.radians(
-                angulo
-            )
-        )
-
-        resultados.append({
-
-            "id":
-                random.randint(
-                    100000,
-                    999999
-                ),
-
-            "lat":
-                round(
-                    nueva_lat,
-                    6
-                ),
-
-            "lon":
-                round(
-                    nueva_lon,
-                    6
-                ),
-
-            "rareza":
-                rareza,
-
-            "sincronicidad":
-                random.randint(
-                    1,
-                    100
-                ),
-
-            "tipo":
-                tipo
-
+        tipo, rareza = obtener_tipo_y_rareza()
+        
+        # Si el usuario escribió una "intención", la acoplamos al tipo de anomalía
+        nombre_final = f"{tipo} ({intencion})" if intencion else tipo
+        
+        anomalias.append({
+            "lat": nueva_lat,
+            "lon": nueva_lon,
+            "tipo": nombre_final,
+            "rareza": rareza
         })
 
-    return jsonify(resultados)
+    return jsonify(anomalias)
 
-
-@app.route(
-    "/guardar",
-    methods=["POST"]
-)
-def guardar():
-
-    data = request.json
-
-    conn = sqlite3.connect(
-        "explorer.db"
-    )
-
-    c = conn.cursor()
-
-    c.execute("""
-        INSERT INTO hallazgos
-        (
-            titulo,
-            descripcion,
-            lat,
-            lon,
-            rareza,
-            tipo
-        )
-        VALUES
-        (?, ?, ?, ?, ?, ?)
-    """, (
-
-        data["titulo"],
-        data["descripcion"],
-        data["lat"],
-        data["lon"],
-        data["rareza"],
-        data["tipo"]
-
-    ))
-
-    xp_ganada = int(
-        data["rareza"]
-    )
-
-    c.execute("""
-        UPDATE usuario
-        SET xp = xp + ?
-        WHERE id = 1
-    """, (
-        xp_ganada,
-    ))
-
-    c.execute("""
-        SELECT xp
-        FROM usuario
-        WHERE id = 1
-    """)
-
-    xp = c.fetchone()[0]
-
-    nivel = (
-        xp // 500
-    ) + 1
-
-    c.execute("""
-        UPDATE usuario
-        SET nivel = ?
-        WHERE id = 1
-    """, (
-        nivel,
-    ))
-
-    conn.commit()
-    conn.close()
-
-    return jsonify({
-        "ok": True
-    })
-
-
-@app.route("/hallazgos")
+@app.route("/hallazgos", methods=["GET"])
 def hallazgos():
+    return jsonify(HALLAZGOS_DB)
 
-    conn = sqlite3.connect(
-        "explorer.db"
-    )
-
-    c = conn.cursor()
-
-    c.execute("""
-        SELECT *
-        FROM hallazgos
-        ORDER BY id DESC
-    """)
-
-    datos = c.fetchall()
-
-    conn.close()
-
-    return jsonify(datos)
-
-
-@app.route("/stats")
-def stats():
-
-    conn = sqlite3.connect(
-        "explorer.db"
-    )
-
-    c = conn.cursor()
-
-    c.execute("""
-        SELECT xp,
-               nivel
-        FROM usuario
-        WHERE id = 1
-    """)
-
-    usuario = c.fetchone()
-
-    conn.close()
-
-    return jsonify({
-
-        "xp":
-            usuario[0],
-
-        "nivel":
-            usuario[1],
-
-        "progreso":
-            usuario[0] % 500
-
-    })
-
+@app.route("/guardar_hallazgo", methods=["POST"])
+def guardar_hallazgo():
+    datos = request.get_json()
+    if not datos:
+        return jsonify({"status": "error"}), 400
+        
+    # Agregamos dinámicamente el punto alcanzado a la lista del Diario
+    nuevo_id = len(HALLAZGOS_DB) + 1
+    HALLAZGOS_DB.append([
+        nuevo_id, 
+        datos.get("tipo", "Anomalía"), 
+        f"Alcanzada con éxito en las coordenadas {datos.get('lat')}, {datos.get('lon')}.", 
+        datos.get("lat"), 
+        datos.get("lon"), 
+        datos.get("rareza", 50), 
+        datos.get("tipo")
+    ])
+    return jsonify({"status": "saved"})
 
 if __name__ == "__main__":
-    app.run(
-        debug=True
-    )
+    app.run(debug=True)
