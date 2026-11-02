@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+
+<title>ExplorerAI V3</title>
+
+<link rel="stylesheet"
+href="{{ url_for('static', filename='css/style.css') }}">
+
+<link rel="stylesheet"
+href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+</head>
+
+<body>
+
+<div class="panel">
+
+    <div class="header">
+
+        <h1>🧭 ExplorerAI V3</h1>
+
+        <div class="stats">
+
+            <div id="nivel">
+                Nivel 1
+            </div>
+
+            <div id="xp">
+                XP: 0
+            </div>
+
+            <div class="xp-bar">
+                <div
+                    class="xp-fill"
+                    id="xpFill">
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div id="radar"></div>
+
+    <div class="acciones">
+
+        <input
+        id="intencion"
+        placeholder="misterio, naturaleza, ruinas...">
+
+        <button onclick="generarAnomalias()">
+            Generar Anomalías
+        </button>
+
+        <button onclick="cargarHallazgos()">
+            Diario
+        </button>
+
+    </div>
+
+</div>
+
+<div id="map"></div>
+
+<div id="diario"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+</body>
+</html>
