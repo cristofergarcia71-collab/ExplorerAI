@@ -1,20 +1,23 @@
 let mapa;
-let marcadores = new Array();
+let marcadores = [];
 let marcadorUsuario = null;
 let miLat = null;
 let miLon = null;
 
+// Función auxiliar para calcular distancias en metros (Fórmula de Haversine)
 function calcularDistancia(lat1, lon1, lat2, lon2) {
-    const R = 6371000;
+    const R = 6371000; // Radio de la Tierra en metros
     const phi1 = lat1 * Math.PI / 180;
     const phi2 = lat2 * Math.PI / 180;
     const deltaPhi = (lat2 - lat1) * Math.PI / 180;
     const deltaLambda = (lon2 - lon1) * Math.PI / 180;
+
     const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
               Math.cos(phi1) * Math.cos(phi2) *
               Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return Math.round(R * c);
+
+    return Math.round(R * c); // Retorna metros enteros
 }
 
 window.onload = function () {
@@ -23,15 +26,21 @@ window.onload = function () {
             miLat = pos.coords.latitude;
             miLon = pos.coords.longitude;
 
-            const miPosicion = new Array(miLat, miLon);
-            mapa = L.map("map").setView(miPosicion, 15);
+            mapa = L.map("map").setView([miLat, miLon], 15);
 
             L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
                 maxZoom: 19,
                 attribution: "&copy; OpenStreetMap"
             }).addTo(mapa);
 
-            marcadorUsuario = L.marker(miPosicion).addTo(mapa).bindPopup("📍 Tu ubicación");
+            // Tu ubicación original como un círculo azul
+            marcadorUsuario = L.circleMarker([miLat, miLon], {
+                radius: 10,
+                color: "#ffffff",
+                weight: 2,
+                fillColor: "#00aaff",
+                fillOpacity: 1
+            }).addTo(mapa).bindPopup("📍 Tu ubicación");
         },
         function (error) {
             console.log(error);
@@ -49,7 +58,7 @@ function generarAnomalias() {
         miLon = pos.coords.longitude;
 
         if (marcadorUsuario) {
-            marcadorUsuario.setLatLng(new Array(miLat, miLon));
+            marcadorUsuario.setLatLng([miLat, miLon]);
         }
 
         fetch("/generar", {
@@ -63,43 +72,78 @@ function generarAnomalias() {
                 intencion: document.getElementById("intencion").value
             })
         })
-        .then(function(res) { return res.json(); })
-        .then(function(datos) {
-            marcadores.forEach(function(marker) { mapa.removeLayer(marker); });
-            marcadores = new Array();
+        .then(response => response.json())
+        .then(datos => {
+            // Limpiar marcadores viejos
+            marcadores.forEach(marker => mapa.removeLayer(marker));
+            marcadores = [];
 
-            datos.forEach(function(p) {
-                const marker = L.marker(new Array(p.lat, p.lon)).addTo(mapa);
-                const urlGoogleMaps = "https://google.com" + p.lat + "," + p.lon;
+            // Array para auto-ajustar el zoom
+            let puntosCoordenadas = [[miLat, miLon]];
 
-                marker.bindPopup(
-                    "<b>" + p.tipo + "</b><br>" +
-                    "Rareza: " + p.rareza + "%<br>" +
-                    "Lat: " + p.lat + "<br>" +
-                    "Lon: " + p.lon + "<br><br>" +
-                    "<a href='" + urlGoogleMaps + "' target='_blank'>Abrir en Google Maps</a>"
-                );
+            datos.forEach(p => {
+                let colorAnomalica = "#00ff55"; // Común (Verde)
+                let radioAnomalica = 8;
+
+                if (p.rareza >= 95) {
+                    colorAnomalica = "#ff0055"; // Legendaria (Rojo)
+                    radioAnomalica = 14;
+                } else if (p.rareza >= 80) {
+                    colorAnomalica = "#ffaa00"; // Rara (Naranja)
+                    radioAnomalica = 11;
+                }
+
+                const distancia = calcularDistancia(miLat, miLon, p.lat, p.lon);
+
+                const marker = L.circleMarker([p.lat, p.lon], {
+                    radius: radioAnomalica,
+                    color: "#ffffff",
+                    weight: 1.5,
+                    fillColor: colorAnomalica,
+                    fillOpacity: 0.9
+                }).addTo(mapa);
+
+                // Enlace original reparado con la URL oficial de Google Maps
+                marker.bindPopup(`
+                    <b>✨ ${p.tipo}</b><br>
+                    🎯 Rareza: ${p.rareza}%<br>
+                    📏 Distancia: ${distancia} metros<br>
+                    <small>Lat: ${p.lat}, Lon: ${p.lon}</small><br><br>
+                    <a href="https://google.com{p.lat},${p.lon}" target="_blank" style="display:inline-block; font-weight:bold; color:#00aaff; text-decoration:underline;">
+                        🗺️ Abrir en Google Maps
+                    </a>
+                `);
 
                 marcadores.push(marker);
+                puntosCoordenadas.push([p.lat, p.lon]);
             });
+
+            // Zoom automático original
+            if (puntosCoordenadas.length > 1) {
+                mapa.fitBounds(puntosCoordenadas, { padding: [50, 50] });
+            }
         });
-    });
+    }, function(error) {
+        console.log(error);
+        alert("Error de ubicación.");
+    }, { enableHighAccuracy: true });
 }
 
 function cargarHallazgos() {
     fetch("/hallazgos")
-    .then(function(res) { return res.json(); })
-    .then(function(datos) {
+    .then(response => response.json())
+    .then(datos => {
         let html = "";
-        datos.forEach(function(h) {
-            html += '<div class="card">' +
-                    '<h3>' + h[1] + '</h3>' +
-                    '<p>' + h[2] + '</p>' +
-                    '<p>Rareza: ' + h[5] + '</p>' +
-                    '<p>Tipo: ' + h[6] + '</p>' +
-                '</div>';
+        datos.forEach(h => {
+            html += `
+                <div class="card" style="background:#202c33; padding:12px; margin:8px 0; border-radius:6px; border-left:5px solid #00ffaa;">
+                    <h3>${h[1]}</h3>
+                    <p>${h[2]}</p>
+                    <p>Rareza: ${h[5]}%</p>
+                    <p>Tipo: ${h[6]}</p>
+                </div>
+            `;
         });
-
         const diario = document.getElementById("diario");
         diario.style.display = diario.style.display === "block" ? "none" : "block";
         diario.innerHTML = html;

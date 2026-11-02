@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ExplorerAI</title>
+    <!-- Cargador Online Oficial de Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <style>
         body {
             margin: 0;
@@ -57,22 +59,6 @@
             border-color: #00ffaa;
         }
 
-        .filtro-rango {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background-color: #202c33;
-            padding: 8px 15px;
-            border-radius: 6px;
-            border: 1px solid #374248;
-            font-size: 14px;
-        }
-
-        .filtro-rango input[type="range"] {
-            accent-color: #00ffaa;
-            cursor: pointer;
-        }
-
         button {
             background-color: #00aaff;
             color: #fff;
@@ -102,7 +88,6 @@
             width: 100%;
             height: calc(100vh - 150px);
             min-height: 400px;
-            background-color: #111b21;
         }
 
         #diario {
@@ -113,14 +98,6 @@
             overflow-y: auto;
             border-top: 2px solid #374248;
             box-shadow: inset 0 4px 10px rgba(0,0,0,0.5);
-        }
-
-        .card {
-            background: #202c33;
-            padding: 12px;
-            margin: 8px 0;
-            border-radius: 6px;
-            border-left: 5px solid #00ffaa;
         }
 
         .leaflet-popup-content-wrapper {
@@ -145,13 +122,6 @@
 
         <div class="controles">
             <input type="text" id="intencion" placeholder="misterio, bosque, aventura...">
-
-            <div class="filtro-rango">
-                <label for="radio-filtro">Radio: </label>
-                <input type="range" id="radio-filtro" min="100" max="2000" step="100" value="500">
-                <span id="valor-radio">500m</span>
-            </div>
-
             <button onclick="generarAnomalias()">Generar Anomalías</button>
             <button class="btn-diario" onclick="cargarHallazgos()">Diario</button>
         </div>
@@ -160,27 +130,9 @@
     <div id="map"></div>
     <div id="diario"></div>
 
-    <!-- Cargador protegido sin URLs externas tradicionales -->
-    <script>
-        (function() {
-            var scriptMapa = document.createElement("script");
-            // Usamos un espejo alternativo que codifica la url en texto plano para saltar el filtro del chat
-            scriptMapa.src = atob("aHR0cHM6Ly9jZG5qcy5jbG91ZGZsYXJlLmNvbS9hamF4L2xpYnMvbGVhZmxldC8xLjkuNC9sZWFmbGV0Lmpz");
-            scriptMapa.onload = function() {
-                // Primero inyectamos los estilos locales creados en el Paso 1
-                var scriptEstilos = document.createElement("script");
-                scriptEstilos.src = "/static/js/mapa_estilos.js";
-                scriptEstilos.onload = function() {
-                    // Por último cargamos la lógica del juego
-                    var scriptApp = document.createElement("script");
-                    scriptApp.src = "/static/js/app.js";
-                    document.body.appendChild(scriptApp);
-                };
-                document.body.appendChild(scriptEstilos);
-            };
-            document.body.appendChild(scriptMapa);
-        })();
-    </script>
+    <!-- Script Oficial Online e Inalterado de Leaflet -->
+    <script src="https://unpkg.com" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="/static/js/app.js"></script>
 
 </body>
 </html>
