@@ -53,6 +53,7 @@ window.onload = function () {
 
 function generarAnomalias() {
     navigator.geolocation.getCurrentPosition(
+        // Parámetro 1: Función de éxito
         function (pos) {
             miLat = pos.coords.latitude;
             miLon = pos.coords.longitude;
@@ -104,7 +105,7 @@ function generarAnomalias() {
                         fillOpacity: 0.9
                     }).addTo(mapa);
 
-                    // Popup con el enlace corregido a Google Maps externo
+                    // Popup con enlace de Google Maps corregido
                     marker.bindPopup(
                         "<b>✨ " + p.tipo + "</b><br>" +
                         "🎯 Rareza: " + p.rareza + "%<br>" +
@@ -117,12 +118,17 @@ function generarAnomalias() {
                     puntosCoordenadas.push(posAnomalia);
                 });
 
-                // Zoom automático para englobar todas las anomalías generadas en Calella
+                // Zoom automático para englobar todas las anomalías generadas
                 if (puntosCoordenadas.length > 1) {
                     mapa.fitBounds(puntosCoordenadas, { padding: new Array(50, 50) });
                 }
             })
             .catch(function(err) { console.error("Error al generar anomalías:", err); });
+        },
+        // SOLUCIÓN: Parámetro 2 añadido (Función de error en caso de fallo de geolocalización)
+        function (error) {
+            console.error("Error de geolocalización al generar:", error);
+            alert("No se pudo obtener tu ubicación para generar las anomalías.");
         },
         { enableHighAccuracy: true }
     );
