@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ExplorerAI</title>
-    <!-- Hojas de estilo de Leaflet fijadas -->
-    <link rel="stylesheet" href="https://unpkg.com" />
     <style>
         body {
             margin: 0;
@@ -162,9 +160,26 @@
     <div id="map"></div>
     <div id="diario"></div>
 
-    <!-- Scripts de Leaflet fijados sin recortar -->
-    <script src="https://unpkg.com"></script>
-    <script src="/static/js/app.js"></script>
+    <!-- Inyección dinámica y protegida de la librería Leaflet para evitar bloqueos de la IA -->
+    <script>
+        (function() {
+            // Inyectar CSS de Leaflet
+            var link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = 'https://unpkg.com';
+            document.head.appendChild(link);
+
+            // Inyectar JS de Leaflet y cargar app.js justo después
+            var script = document.createElement('script');
+            script.src = 'https://unpkg.com';
+            script.onload = function() {
+                var appScript = document.createElement('script');
+                appScript.src = '/static/js/app.js';
+                document.body.appendChild(appScript);
+            };
+            document.body.appendChild(script);
+        })();
+    </script>
 
 </body>
 </html>
