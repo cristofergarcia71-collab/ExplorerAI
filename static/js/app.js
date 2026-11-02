@@ -28,10 +28,10 @@ window.onload = function () {
 
             mapa = L.map("map").setView([miLat, miLon], 15);
 
-            // CORREGIDO: URL de OpenStreetMap con sus barras diagonales correspondientes
-            L.tileLayer("https://openstreetmap.org{z}/{x}/{y}.png", {
+            // URL CORRECTA Y COMPLETA DE OPENSTREETMAP
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
                 maxZoom: 19,
-                attribution: "&copy; OpenStreetMap"
+                attribution: "&copy; <a href='https://openstreetmap.org'>OpenStreetMap</a> contributors"
             }).addTo(mapa);
 
             // MEJORA 1: Tu ubicación como un círculo azul brillante
@@ -105,7 +105,7 @@ function generarAnomalias() {
                         fillOpacity: 0.9
                     }).addTo(mapa);
 
-                    // CORREGIDO: Popup estructurado con URL de Google Maps arreglada
+                    // URL CORRECTA DE GOOGLE MAPS
                     marker.bindPopup(`
                         <b>✨ ${p.tipo}</b><br>
                         🎯 Rareza: ${p.rareza}%<br>
@@ -136,7 +136,7 @@ function cargarHallazgos() {
     .then(datos => {
         let html = "";
         datos.forEach(h => {
-            // CORREGIDO: Soporte tanto si los datos vienen como lista [id, titulo, desc...] o como objeto {titulo, desc...}
+            // Mapeo seguro según estructura de lista o diccionario
             let titulo = h.titulo || h[1] || "Hallazgo";
             let desc = h.descripcion || h[2] || "";
             let rareza = h.rareza || h[5] || "??";
