@@ -1,72 +1,182 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExplorerAI</title>
+    <!-- Hojas de estilo de Leaflet para el mapa -->
+    <link rel="stylesheet" href="https://unpkg.com" />
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0b141a;
+            color: #ffffff;
+        }
 
-<meta charset="UTF-8">
+        /* Panel superior de la interfaz */
+        header {
+            background-color: #111b21;
+            padding: 15px 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
 
-<meta name="viewport"
-content="width=device-width, initial-scale=1.0">
+        .perfil {
+            margin-bottom: 12px;
+        }
 
-<title>ExplorerAI</title>
+        .perfil h2 {
+            margin: 0 0 5px 0;
+            font-size: 18px;
+            color: #00ffaa;
+        }
 
-<link rel="stylesheet"
-href="{{ url_for('static', filename='css/style.css') }}">
+        .perfil p {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            color: #aebac1;
+        }
 
-<link rel="stylesheet"
-href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+        /* Controles de la aplicación */
+        .controles {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
 
+        input[type="text"] {
+            flex: 1;
+            min-width: 200px;
+            background-color: #202c33;
+            border: 1px solid #374248;
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #00ffaa;
+        }
+
+        /* Nuevo bloque del filtro de radio */
+        .filtro-rango {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: #202c33;
+            padding: 8px 15px;
+            border-radius: 6px;
+            border: 1px solid #374248;
+            font-size: 14px;
+        }
+
+        .filtro-rango input[type="range"] {
+            accent-color: #00ffaa;
+            cursor: pointer;
+        }
+
+        button {
+            background-color: #00aaff;
+            color: #fff;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #0088cc;
+        }
+
+        button.btn-diario {
+            background-color: #00ffaa;
+            color: #0b141a;
+        }
+
+        button.btn-diario:hover {
+            background-color: #00cc88;
+        }
+
+        /* Estructura del mapa */
+        #map {
+            width: 100%;
+            height: calc(100vh - 150px);
+            min-height: 400px;
+        }
+
+        /* Ventana emergente del diario de hallazgos */
+        #diario {
+            display: none;
+            background-color: #111b21;
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            border-top: 2px solid #374248;
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .card {
+            background: #202c33;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 6px;
+            border-left: 5px solid #00ffaa;
+        }
+
+        /* Estilos personalizados para ajustar Leaflet al tema oscuro */
+        .leaflet-popup-content-wrapper {
+            background-color: #111b21 !important;
+            color: #fff !important;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        .leaflet-popup-tip {
+            background-color: #111b21 !important;
+        }
+    </style>
 </head>
-
 <body>
 
-<div class="panel">
-
-    <h1>🧭 ExplorerAI</h1>
-
-    <div id="nivel">
-        Nivel 1
-    </div>
-
-    <div id="xp">
-        XP: 0
-    </div>
-
-    <div class="xp-bar">
-        <div
-        class="xp-fill"
-        id="xpFill">
+    <header>
+        <div class="perfil">
+            <h2>🧭 ExplorerAI</h2>
+            <p>Nivel 1 | XP: 0</p>
         </div>
-    </div>
 
-    <div id="objetivo">
+        <div class="controles">
+            <!-- Entrada de intenciones de aventura -->
+            <input type="text" id="intencion" placeholder="misterio, bosque, aventura...">
 
-        Sin objetivo seleccionado
+            <!-- NUEVO: Selector de radio dinámico -->
+            <div class="filtro-rango">
+                <label for="radio-filtro">Radio: </label>
+                <input type="range" id="radio-filtro" min="100" max="2000" step="100" value="500">
+                <span id="valor-radio">500m</span>
+            </div>
 
-    </div>
+            <!-- Botones de control principales -->
+            <button onclick="generarAnomalias()">Generar Anomalías</button>
+            <button class="btn-diario" onclick="cargarHallazgos()">Diario</button>
+        </div>
+    </header>
 
-    <input
-    id="intencion"
-    placeholder="misterio, bosque, aventura...">
+    <!-- Contenedor dinámico donde se inyecta el mapa interactivo -->
+    <div id="map"></div>
 
-    <button onclick="generarAnomalias()">
-        Generar Anomalías
-    </button>
+    <!-- Panel inferior oculto del Diario de expediciones -->
+    <div id="diario"></div>
 
-    <button onclick="cargarHallazgos()">
-        Diario
-    </button>
-
-</div>
-
-<div id="map"></div>
-
-<div id="diario"></div>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <!-- Scripts externos necesarios de la librería Leaflet -->
+    <script src="https://unpkg.com"></script>
+    <!-- Vinculación limpia con tu lógica de JavaScript -->
+    <script src="/static/js/app.js"></script>
 
 </body>
-
 </html>
