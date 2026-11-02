@@ -1,9 +1,14 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+
 <meta charset="UTF-8">
 
-<title>ExplorerAI V3</title>
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>ExplorerAI</title>
 
 <link rel="stylesheet"
 href="{{ url_for('static', filename='css/style.css') }}">
@@ -17,48 +22,42 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <div class="panel">
 
-    <div class="header">
+    <h1>🧭 ExplorerAI</h1>
 
-        <h1>🧭 ExplorerAI V3</h1>
+    <div id="nivel">
+        Nivel 1
+    </div>
 
-        <div class="stats">
+    <div id="xp">
+        XP: 0
+    </div>
 
-            <div id="nivel">
-                Nivel 1
-            </div>
-
-            <div id="xp">
-                XP: 0
-            </div>
-
-            <div class="xp-bar">
-                <div
-                    class="xp-fill"
-                    id="xpFill">
-                </div>
-            </div>
-
+    <div class="xp-bar">
+        <div
+        class="xp-fill"
+        id="xpFill">
         </div>
+    </div>
+
+    <div id="objetivo">
+
+        Sin objetivo seleccionado
 
     </div>
 
-    <div id="radar"></div>
+    <input
+    id="intencion"
+    placeholder="misterio, bosque, aventura...">
 
-    <div class="acciones">
+    <button
+    onclick="generarAnomalias()">
+        Generar Anomalías
+    </button>
 
-        <input
-        id="intencion"
-        placeholder="misterio, naturaleza, ruinas...">
-
-        <button onclick="generarAnomalias()">
-            Generar Anomalías
-        </button>
-
-        <button onclick="cargarHallazgos()">
-            Diario
-        </button>
-
-    </div>
+    <button
+    onclick="cargarHallazgos()">
+        Diario
+    </button>
 
 </div>
 

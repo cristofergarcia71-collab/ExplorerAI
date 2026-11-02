@@ -5,46 +5,25 @@
 }
 
 body{
-    background:#0b1220;
+    background:#0a0f1f;
+    font-family:Segoe UI,sans-serif;
     color:white;
-    font-family:Segoe UI,Arial,sans-serif;
-    overflow:hidden;
 }
 
 .panel{
 
-    background:linear-gradient(
-        135deg,
-        #0f172a,
-        #111827
-    );
+    background:#111827;
 
     padding:20px;
 
     border-bottom:2px solid #00ffb3;
-
-    z-index:1000;
-}
-
-.header{
-
-    display:flex;
-
-    justify-content:space-between;
-
-    align-items:center;
 }
 
 h1{
 
     color:#00ffb3;
 
-    font-size:42px;
-}
-
-.stats{
-
-    min-width:350px;
+    margin-bottom:15px;
 }
 
 #nivel,
@@ -53,17 +32,32 @@ h1{
     margin-bottom:8px;
 }
 
+#objetivo{
+
+    margin-top:10px;
+
+    margin-bottom:15px;
+
+    color:#00ffb3;
+
+    font-weight:bold;
+}
+
 .xp-bar{
 
     width:100%;
 
-    height:14px;
+    max-width:350px;
 
-    background:#222;
+    height:12px;
 
-    border-radius:20px;
+    background:#333;
+
+    border-radius:30px;
 
     overflow:hidden;
+
+    margin-bottom:15px;
 }
 
 .xp-fill{
@@ -75,88 +69,34 @@ h1{
     background:#00ffb3;
 
     transition:1s;
-
-    border-radius:20px;
-}
-
-#radar{
-
-    width:120px;
-
-    height:120px;
-
-    border-radius:50%;
-
-    border:2px solid #00ffb3;
-
-    margin:15px auto;
-
-    position:relative;
-
-    animation:girar 5s linear infinite;
-}
-
-#radar::before{
-
-    content:"";
-
-    position:absolute;
-
-    width:60px;
-
-    height:3px;
-
-    background:#00ffb3;
-
-    top:50%;
-
-    left:50%;
-}
-
-@keyframes girar{
-
-    from{
-        transform:rotate(0deg);
-    }
-
-    to{
-        transform:rotate(360deg);
-    }
-}
-
-.acciones{
-
-    display:flex;
-
-    gap:10px;
-
-    align-items:center;
 }
 
 input{
 
-    flex:1;
+    width:100%;
 
-    padding:14px;
+    max-width:400px;
+
+    padding:12px;
 
     border:none;
 
     border-radius:12px;
 
-    font-size:16px;
+    margin-bottom:10px;
 }
 
 button{
 
-    padding:14px 18px;
+    padding:12px 14px;
 
     border:none;
 
     border-radius:12px;
 
-    background:#00ffb3;
+    margin-right:5px;
 
-    color:black;
+    background:#00ffb3;
 
     font-weight:bold;
 
@@ -165,14 +105,14 @@ button{
 
 button:hover{
 
-    background:#00d999;
+    background:#00d69a;
 }
 
 #map{
 
     width:100%;
 
-    height:calc(100vh - 260px);
+    height:75vh;
 }
 
 #diario{
@@ -181,17 +121,17 @@ button:hover{
 
     right:20px;
 
-    top:260px;
+    top:220px;
 
-    width:350px;
+    width:320px;
 
     max-height:600px;
 
     overflow-y:auto;
 
-    z-index:999;
-
     display:none;
+
+    z-index:999;
 }
 
 .card{
@@ -200,14 +140,9 @@ button:hover{
 
     padding:15px;
 
-    margin-bottom:10px;
-
     border-radius:12px;
 
-    border-left:5px solid #00ffb3;
-}
+    margin-bottom:10px;
 
-.card h3{
-
-    color:#00ffb3;
+    border-left:4px solid #00ffb3;
 }
