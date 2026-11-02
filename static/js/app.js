@@ -25,7 +25,6 @@ window.onload = function(){
                 );
 
                 cargarStats();
-
             }
 
             actualizarPosicion(
@@ -74,28 +73,19 @@ function iniciarMapa(lat,lon){
     ).addTo(mapa);
 }
 
-function actualizarPosicion(
-    lat,
-    lon
-){
+function actualizarPosicion(lat,lon){
 
     if(!marcadorUsuario){
 
         marcadorUsuario =
-        L.marker([
-            lat,
-            lon
-        ])
+        L.marker([lat,lon])
         .addTo(mapa)
-        .bindPopup(
-            "Tu ubicación"
-        );
+        .bindPopup("Tu ubicación");
 
     }else{
 
-        marcadorUsuario.setLatLng(
-            [lat,lon]
-        );
+        marcadorUsuario
+        .setLatLng([lat,lon]);
     }
 }
 
@@ -118,12 +108,12 @@ function cargarStats(){
         data.xp;
 
         let porcentaje =
-        (data.xp%500)/5;
+        (data.xp % 500) / 5;
 
         document.getElementById(
             "xpFill"
         ).style.width =
-        porcentaje+"%";
+        porcentaje + "%";
     });
 }
 
@@ -153,33 +143,34 @@ function generarAnomalias(){
                     intencion:
                     document
                     .getElementById(
-                        "intencion"
+                    "intencion"
                     ).value
                 })
 
             })
 
             .then(r=>r.json())
+
             .then(datos=>{
 
-                marcadores.forEach(m=>{
-                    mapa.removeLayer(m);
-                });
+                marcadores.forEach(
+                    m=>mapa.removeLayer(m)
+                );
 
                 marcadores=[];
-
-                objetivoActual=null;
 
                 datos.forEach(p=>{
 
                     let color =
                     p.rareza>=95
                     ? "red"
-                    : p.rareza>=80
+                    :
+                    p.rareza>=80
                     ? "orange"
                     : "lime";
 
                     let marker =
+
                     L.circleMarker(
 
                         [p.lat,p.lon],
@@ -192,6 +183,7 @@ function generarAnomalias(){
                         }
 
                     )
+
                     .addTo(mapa);
 
                     marker.on(
@@ -200,8 +192,7 @@ function generarAnomalias(){
 
                         function(){
 
-                            objetivoActual =
-                            p;
+                            objetivoActual = p;
 
                             document
                             .getElementById(
@@ -219,23 +210,24 @@ function generarAnomalias(){
 
                             <br>
 
-                            Coordenadas:
+                            Lat:
+                            ${p.lat}
 
                             <br>
 
-                            ${p.lat}
-
-                            ,
-
+                            Lon:
                             ${p.lon}
                             `;
                         }
+
                     );
 
                     marker.bindPopup(
 
                     `
-                    <b>${p.tipo}</b>
+                    <b>
+                    ${p.tipo}
+                    </b>
 
                     <br>
 
@@ -253,9 +245,11 @@ function generarAnomalias(){
                     <br><br>
 
                     <a
-                    target="_blank"
-                    href="https://www.google.com/maps?q=${p.lat},${p.lon}">
+                    href="https://www.google.com/maps?q=${p.lat},${p.lon}"
+                    target="_blank">
+
                     Abrir Google Maps
+
                     </a>
                     `
                     );
@@ -263,6 +257,7 @@ function generarAnomalias(){
                     marcadores.push(
                         marker
                     );
+
                 });
 
             });
@@ -270,17 +265,20 @@ function generarAnomalias(){
         }
 
     );
+
 }
 
 function actualizarDistancia(
-    lat,
-    lon
+lat,
+lon
 ){
 
     if(!objetivoActual)
         return;
 
-    let d = calcularDistancia(
+    let distancia =
+
+    calcularDistancia(
 
         lat,
         lon,
@@ -301,7 +299,7 @@ function actualizarDistancia(
 
     Distancia:
 
-    ${Math.round(d)}
+    ${Math.round(distancia)}
     metros
 
     <br>
@@ -310,13 +308,13 @@ function actualizarDistancia(
     ${objetivoActual.rareza}%
     `;
 
-    if(d<25){
+    if(distancia < 25){
 
         alert(
         "🎉 Anomalía alcanzada"
         );
 
-        objetivoActual=null;
+        objetivoActual = null;
     }
 
 }
@@ -363,6 +361,7 @@ lon2
     Math.sin(dl/2);
 
     let c =
+
     2*Math.atan2(
         Math.sqrt(a),
         Math.sqrt(1-a)
@@ -388,9 +387,13 @@ function cargarHallazgos(){
             `
             <div class="card">
 
-                <h3>${h[1]}</h3>
+                <h3>
+                ${h[1]}
+                </h3>
 
-                <p>${h[2]}</p>
+                <p>
+                ${h[2]}
+                </p>
 
                 <p>
                 Rareza:
@@ -404,6 +407,7 @@ function cargarHallazgos(){
 
             </div>
             `;
+
         });
 
         let diario =
@@ -412,15 +416,20 @@ function cargarHallazgos(){
         );
 
         diario.style.display =
-        diario.style.display
-        ===
+
+        diario.style.display ===
         "block"
-        ? "none"
-        : "block";
+
+        ?
+
+        "none"
+
+        :
+
+        "block";
 
         diario.innerHTML =
         html;
-
     });
 
 }
