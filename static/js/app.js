@@ -1,5 +1,5 @@
 let mapa;
-let marcadores = [];
+let marcadores = new Array();
 let marcadorUsuario = null;
 let miLat = null;
 let miLon = null;
@@ -26,7 +26,8 @@ window.onload = function () {
             miLat = pos.coords.latitude;
             miLon = pos.coords.longitude;
 
-            mapa = L.map("map").setView([miLat, miLon], 15);
+            const centroMapa = new Array(miLat, miLon);
+            mapa = L.map("map").setView(centroMapa, 15);
 
             L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
                 maxZoom: 19,
@@ -34,7 +35,7 @@ window.onload = function () {
             }).addTo(mapa);
 
             // Tu ubicación como un círculo azul brillante
-            marcadorUsuario = L.circleMarker([miLat, miLon], {
+            marcadorUsuario = L.circleMarker(centroMapa, {
                 radius: 10,
                 color: "#ffffff",
                 weight: 2,
@@ -58,7 +59,7 @@ function generarAnomalias() {
         miLon = pos.coords.longitude;
 
         if (marcadorUsuario) {
-            marcadorUsuario.setLatLng([miLat, miLon]);
+            marcadorUsuario.setLatLng(new Array(miLat, miLon));
         }
 
         fetch("/generar", {
@@ -72,17 +73,17 @@ function generarAnomalias() {
                 intencion: document.getElementById("intencion").value
             })
         })
-        .then(response => response.json())
-        .then(datos => {
-            // Limpiar marcadores viejos del mapa
-            marcadores.forEach(marker => mapa.removeLayer(marker));
-            marcadores = [];
+        .then(function(response) { return response.json(); })
+        .then(function(datos) {
+            // Limpiar marcadores viejos del mapa de forma segura
+            marcadores.forEach(function(marker) { mapa.removeLayer(marker); });
+            marcadores = new Array();
 
-            // Array para auto-ajustar el zoom
-            let puntosCoordenadas = [[miLat, miLon]];
+            // Array de posiciones inicializado sin usar corchetes planos conflictivos
+            let puntosCoordenadas = new Array();
+            puntosCoordenadas.push(new Array(miLat, miLon));
 
-            datos.forEach(p => {
-                // Definir color y tamaño original por rareza
+            datos.forEach(function(p) {
                 let colorAnomalica = "#00ff55"; // Común (Verde)
                 let radioAnomalica = 8;
 
@@ -95,9 +96,10 @@ function generarAnomalias() {
                 }
 
                 const distancia = calcularDistancia(miLat, miLon, p.lat, p.lon);
+                const posAnomalia = new Array(p.lat, p.lon);
 
                 // Crear anomalía como un círculo coloreado en el mapa
-                const marker = L.circleMarker([p.lat, p.lon], {
+                const marker = L.circleMarker(posAnomalia, {
                     radius: radioAnomalica,
                     color: "#ffffff",
                     weight: 1.5,
@@ -105,24 +107,24 @@ function generarAnomalias() {
                     fillOpacity: 0.9
                 }).addTo(mapa);
 
-                // CORREGIDO: Añadido el $ que faltaba en p.lat y estructurada la URL oficial de búsqueda de Google Maps
-                marker.bindPopup(`
-                    <b>✨ ${p.tipo}</b><br>
-                    🎯 Rareza: ${p.rareza}%<br>
-                    📏 Distancia: ${distancia} metros<br>
-                    <small>Lat: ${p.lat}, Lon: ${p.lon}</small><br><br>
-                    <a href="https://google.com{p.lat},${p.lon}" target="_blank" style="display:inline-block; font-weight:bold; color:#00aaff; text-decoration:underline;">
-                        🗺️ Abrir en Google Maps
-                    </a>
-                `);
+                // URL 100% limpia concatenada a la antigua usanza para evitar bugs de plantillas de texto
+                const urlGoogleMaps = "https://google.com" + p.lat + "," + p.lon;
+
+                marker.bindPopup(
+                    "<b>✨ " + p.tipo + "</b><br>" +
+                    "🎯 Rareza: " + p.rareza + "%<br>" +
+                    "📏 Distancia: " + distancia + " metros<br>" +
+                    "<small>Lat: " + p.lat + ", Lon: " + p.lon + "</small><br><br>" +
+                    "<a href='" + urlGoogleMaps + "' target='_blank' style='display:inline-block; font-weight:bold; color:#00aaff; text-decoration:underline;'>🗺️ Abrir en Google Maps</a>"
+                );
 
                 marcadores.push(marker);
-                puntosCoordenadas.push([p.lat, p.lon]);
+                puntosCoordenadas.push(posAnomalia);
             });
 
-            // Zoom automático adaptado a todos los puntos generados
+            // Zoom automático adaptado sin peligro de borrado de sintaxis
             if (puntosCoordenadas.length > 1) {
-                mapa.fitBounds(puntosCoordenadas, { padding: [50, 50] });
+                mapa.fitBounds(puntosCoordenadas, { padding: new Array(50, 50) });
             }
         });
     }, function(error) {
@@ -133,31 +135,28 @@ function generarAnomalias() {
 
 function cargarHallazgos() {
     fetch("/hallazgos")
-    .then(response => response.json())
-    .then(datos => {
+    .then(function(response) { return response.json(); })
+    .then(function(datos) {
         let html = "";
 
-        datos.forEach(h => {
-            // Mapeo seguro para listas de base de datos tradicionales [id, titulo, desc...]
+        datos.forEach(function(h) {
             let titulo = h[1] || "Anomalía";
             let desc = h[2] || "";
             let rareza = h[5] || "??";
             let tipo = h[6] || "";
 
-            html += `
-                <div class="card" style="background:#202c33; padding:12px; margin:8px 0; border-radius:6px; border-left:5px solid #00ffaa;">
-                    <h3 style="margin:0 0 5px 0; color:#00ff55;">${titulo}</h3>
-                    <p style="margin:0 0 5px 0; font-size:14px; color:#ccc;">${desc}</p>
-                    <p style="margin:0; font-size:12px; color:#ffaa00;">Rareza: ${rareza}% | Tipo: ${tipo}</p>
-                </div>
-            `;
+            html += '<div class="card" style="background:#202c33; padding:12px; margin:8px 0; border-radius:6px; border-left:5px solid #00ffaa;">' +
+                    '<h3 style="margin:0 0 5px 0; color:#00ff55;">' + titulo + '</h3>' +
+                    '<p style="margin:0 0 5px 0; font-size:14px; color:#ccc;">' + desc + '</p>' +
+                    '<p style="margin:0; font-size:12px; color:#ffaa00;">Rareza: ' + rareza + '% | Tipo: ' + tipo + '</p>' +
+                '</div>';
         });
 
         const diario = document.getElementById("diario");
         diario.style.display = diario.style.display === "block" ? "none" : "block";
         diario.innerHTML = html;
     })
-    .catch(err => {
+    .catch(function(err) {
         console.error("Error en el diario:", err);
     });
 }
