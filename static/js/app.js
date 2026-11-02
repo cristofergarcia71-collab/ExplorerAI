@@ -105,7 +105,7 @@ function generarAnomalias() {
                     fillOpacity: 0.9
                 }).addTo(mapa);
 
-                // HISTÓRICO: Popup original dentro del mapa con su enlace limpio a Google Maps
+                // CORREGIDO: Añadido el $ que faltaba en p.lat y estructurada la URL oficial de búsqueda de Google Maps
                 marker.bindPopup(`
                     <b>✨ ${p.tipo}</b><br>
                     🎯 Rareza: ${p.rareza}%<br>
@@ -138,7 +138,7 @@ function cargarHallazgos() {
         let html = "";
 
         datos.forEach(h => {
-            // Mapeo seguro e infalible para listas de base de datos tradicionales [id, titulo, desc...]
+            // Mapeo seguro para listas de base de datos tradicionales [id, titulo, desc...]
             let titulo = h[1] || "Anomalía";
             let desc = h[2] || "";
             let rareza = h[5] || "??";
