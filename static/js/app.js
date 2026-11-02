@@ -79,6 +79,13 @@ function generarAnomalias() {
         let puntosCoordenadas = new Array();
         puntosCoordenadas.push(new Array(miLat, miLon));
 
+        // Limpiar el panel informativo lateral al regenerar
+        const panel = document.getElementById("diario");
+        if (panel) {
+            panel.style.display = "block";
+            panel.innerHTML = "<p style='color:#aebac1; text-align:center;'>Haz clic en cualquier círculo del mapa para ver sus detalles aquí.</p>";
+        }
+
         datos.forEach(function(p, index) {
             let colorAnomalica = "#00ff55";
             let radioAnomalica = 8;
@@ -86,7 +93,6 @@ function generarAnomalias() {
             if (p.rareza >= 95) { colorAnomalica = "#ff0055"; radioAnomalica = 14; } 
             else if (p.rareza >= 80) { colorAnomalica = "#ffaa00"; radioAnomalica = 11; }
 
-            const distancia = calcularDistancia(miLat, miLon, p.lat, p.lon);
             const posAnomalia = new Array(p.lat, p.lon);
 
             const marker = L.circleMarker(posAnomalia, {
@@ -95,14 +101,10 @@ function generarAnomalias() {
 
             window["anomalia_activa_" + index] = p;
 
-            // SOLUCIÓN: Usamos botones de acción limpios nativos para evitar romper el HTML interno del popup
-            marker.bindPopup(
-                "<b>✨ " + p.tipo + "</b><br>" +
-                "🎯 Rareza: " + p.rareza + "%<br>" +
-                "📏 Distancia: " + distancia + " m<br><br>" +
-                "<button onclick=\"registrarHallazgoRapido(" + index + ")\" style='background:#00ff55; color:#000; border:none; padding:6px 12px; cursor:pointer; font-weight:bold; border-radius:4px; margin-bottom:8px; display:block; width:100%;'>📸 Registrar en el Diario</button>" +
-                "<button onclick=\"abrirEnGoogleMaps(" + p.lat + "," + p.lon + ")\" style='background:#00aaff; color:#fff; border:none; padding:6px 0; border-radius:4px; font-weight:bold; display:block; width:100%; cursor:pointer;'>🗺️ Ver en Google Maps</button>"
-            );
+            // Al hacer clic en el punto, mostramos la información de forma nativa abajo
+            marker.on("click", function() {
+                mostrarDetallesAnomalia(index);
+            });
 
             marcadores.push(marker);
             puntosCoordenadas.push(posAnomalia);
@@ -114,15 +116,35 @@ function generarAnomalias() {
     });
 }
 
-// Nueva función nativa para redirigir de manera limpia sin romper cadenas de texto
+function mostrarDetallesAnomalia(index) {
+    const p = window["anomalia_activa_" + index];
+    const distancia = calcularDistancia(miLat, miLon, p.lat, p.lon);
+    const panel = document.getElementById("diario");
+
+    if (!panel) return;
+
+    panel.style.display = "block";
+    panel.innerHTML = 
+        '<div class="card" style="border-left: 5px solid #00aaff; background:#202c33; padding:15px; border-radius:6px;">' +
+            '<h3 style="margin:0 0 8px 0; color:#00ffaa;">✨ ' + p.tipo + '</h3>' +
+            '<p style="margin:0 0 5px 0;">🎯 <b>Rareza:</b> ' + p.rareza + '%</p>' +
+            '<p style="margin:0 0 15px 0;">📏 <b>Distancia:</b> ' + distancia + ' metros</p>' +
+            '<div style="display:flex; gap:10px;">' +
+                '<button onclick="registrarHallazgoRapido(' + index + ')" style="background:#00ff55; color:#000; flex:1; padding:10px; font-weight:bold; border:none; border-radius:4px; cursor:pointer;">📸 Guardar en Diario</button>' +
+                '<button onclick="abrirEnGoogleMaps(' + p.lat + ',' + p.lon + ')" style="background:#00aaff; color:#fff; flex:1; padding:10px; font-weight:bold; border:none; border-radius:4px; cursor:pointer;">🗺️ Abrir Maps</button>' +
+            '</div>' +
+        '</div>';
+}
+
 function abrirEnGoogleMaps(lat, lon) {
-    const url = "https://google.com" + lat + "," + lon;
-    window.open(url, "_blank");
+    // Reconstrucción matemática segura del enlace de Google Maps usando codificación hexadecimal
+    const protocolo = String.fromCharCode(104,116,116,112,115,58,47,47,119,119,119,46,103,111,111,103,108,101,46,99,111,109,47,109,97,112,115,63,113,61);
+    window.open(protocolo + lat + "," + lon, "_blank");
 }
 
 function registrarHallazgoRapido(index) {
     const objetoAnomalia = window["anomalia_activa_" + index];
-    const notaAventurera = prompt("Escribe una nota o descripción para registrar tu hallazgo en Calella:");
+    const notaAventurera = prompt("Escribe una nota para registrar tu hallazgo en Calella:");
     
     if (notaAventurera === null) return; 
 
@@ -138,8 +160,8 @@ function registrarHallazgoRapido(index) {
         })
     })
     .then(function() {
-        alert("¡Hallazgo archivado con éxito en tu Diario!");
-        mapa.closePopup();
+        alert("¡Hallazgo archivado con éxito!");
+        cargarHallazgos();
     });
 }
 
@@ -147,7 +169,7 @@ function cargarHallazgos() {
     fetch("/hallazgos")
     .then(function(res) { return res.json(); })
     .then(function(datos) {
-        let html = "";
+        let html = "<h3 style='color:#00ffaa; margin-top:0;'>📜 Historial de Hallazgos</h3>";
         datos.forEach(function(h) {
             let titulo = h[1] || "Anomalía";
             let desc = h[2] || "";
@@ -161,7 +183,9 @@ function cargarHallazgos() {
         });
 
         const diario = document.getElementById("diario");
-        diario.style.display = diario.style.display === "block" ? "none" : "block";
-        diario.innerHTML = html;
+        if (diario) {
+            diario.style.display = "block";
+            diario.innerHTML = html;
+        }
     });
 }
