@@ -58,7 +58,6 @@ window.onload = function () {
 function generarAnomalias() {
     if (!miLat || !miLon) return alert("Esperando señal GPS...");
 
-    // Leer el rango del slider dinámico del HTML
     const radioSlider = document.getElementById("radio-filtro");
     const radioMetros = radioSlider ? parseInt(radioSlider.value) : 500;
 
@@ -96,16 +95,13 @@ function generarAnomalias() {
 
             window["anomalia_activa_" + index] = p;
 
-            // URL estándar limpia para evitar cualquier filtro del navegador
-            const linkGoogleMaps = "https://google.com" + p.lat + "," + p.lon;
-
-            // POPUP CORREGIDO: Sin funciones colgadas de objetivos. Solo el diario y Google Maps estable.
+            // SOLUCIÓN: Usamos botones de acción limpios nativos para evitar romper el HTML interno del popup
             marker.bindPopup(
                 "<b>✨ " + p.tipo + "</b><br>" +
                 "🎯 Rareza: " + p.rareza + "%<br>" +
                 "📏 Distancia: " + distancia + " m<br><br>" +
                 "<button onclick=\"registrarHallazgoRapido(" + index + ")\" style='background:#00ff55; color:#000; border:none; padding:6px 12px; cursor:pointer; font-weight:bold; border-radius:4px; margin-bottom:8px; display:block; width:100%;'>📸 Registrar en el Diario</button>" +
-                "<a href='" + linkGoogleMaps + "' target='_blank' rel='noopener noreferrer' style='display:inline-block; width:100%; text-align:center; background:#00aaff; color:#fff; padding:6px 0; border-radius:4px; font-weight:bold; text-decoration:none;'>🗺️ Ver en Google Maps</a>"
+                "<button onclick=\"abrirEnGoogleMaps(" + p.lat + "," + p.lon + ")\" style='background:#00aaff; color:#fff; border:none; padding:6px 0; border-radius:4px; font-weight:bold; display:block; width:100%; cursor:pointer;'>🗺️ Ver en Google Maps</button>"
             );
 
             marcadores.push(marker);
@@ -116,6 +112,12 @@ function generarAnomalias() {
             mapa.fitBounds(puntosCoordenadas, { padding: new Array(50, 50) });
         }
     });
+}
+
+// Nueva función nativa para redirigir de manera limpia sin romper cadenas de texto
+function abrirEnGoogleMaps(lat, lon) {
+    const url = "https://google.com" + lat + "," + lon;
+    window.open(url, "_blank");
 }
 
 function registrarHallazgoRapido(index) {
