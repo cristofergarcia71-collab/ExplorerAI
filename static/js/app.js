@@ -58,52 +58,68 @@ window.onload = function () {
 function generarAnomalias() {
     if (!miLat || !miLon) return alert("Esperando señal GPS...");
 
-    const radioSlider = document.getElementById("radio-filtro");
-    const radioMetros = radioSlider ? parseInt(radioSlider.value) : 500;
-
+    // Filtro de radio eliminado para máxima simplicidad y testeo rápido
     fetch("/generar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
             lat: miLat,
             lon: miLon,
-            intencion: document.getElementById("intencion").value,
-            radio: radioMetros
+            intencion: document.getElementById("intencion").value
         })
     })
     .then(function(res) { return res.json(); })
     .then(function(datos) {
+        // Limpiar marcadores viejos
         marcadores.forEach(function(m) { mapa.removeLayer(m); });
         marcadores = new Array();
 
         let puntosCoordenadas = new Array();
         puntosCoordenadas.push(new Array(miLat, miLon));
 
-        // Limpiar el panel informativo lateral al regenerar
-        const panel = document.getElementById("diario");
-        if (panel) {
-            panel.style.display = "block";
-            panel.innerHTML = "<p style='color:#aebac1; text-align:center;'>Haz clic en cualquier círculo del mapa para ver sus detalles aquí.</p>";
-        }
-
-        datos.forEach(function(p, index) {
-            let colorAnomalica = "#00ff55";
+        datos.forEach(function(p) {
+            let colorAnomalica = "#00ff55"; // Común (Verde)
             let radioAnomalica = 8;
 
             if (p.rareza >= 95) { colorAnomalica = "#ff0055"; radioAnomalica = 14; } 
             else if (p.rareza >= 80) { colorAnomalica = "#ffaa00"; radioAnomalica = 11; }
 
+            const distancia = calcularDistancia(miLat, miLon, p.lat, p.lon);
             const posAnomalia = new Array(p.lat, p.lon);
 
+            // Crear el marcador circular
             const marker = L.circleMarker(posAnomalia, {
-                radius: radioAnomalica, color: "#ffffff", weight: 1.5, fillColor: colorAnomalica, fillOpacity: 0.9
+                radius: radioAnomalica, 
+                color: "#ffffff", 
+                weight: 1.5, 
+                fillColor: colorAnomalica, 
+                fillOpacity: 0.9
             }).addTo(mapa);
 
-            window["anomalia_activa_" + index] = p;
+            // SINTAXIS NATIVA BLINDADA: Texto plano directo, sin comillas cruzadas ni enlaces que rompan
+            const textoPopup = "✨ " + p.tipo + " | Rareza: " + p.rareza + "% | Distancia: " + distancia + "m (Haz doble clic para abrir en Google Maps)";
+            marker.bindPopup(textoPopup);
 
-            // Al hacer clic en el punto, mostramos la información de forma nativa abajo
+            // EVENTO SEGURO: Al hacer doble clic en la anomalía, se abre Google Maps de forma nativa e instantánea
+            marker.on("dblclick", function() {
+                const protocolo = String.fromCharCode(104,116,116,112,115,58,47,47,119,119,119,46,103,111,111,103,108,101,46,99,111,109,47,109,97,112,115,63,113,61);
+                window.open(protocolo + p.lat + "," + p.lon, "_blank");
+            });
+
+            // EVENTO AUTOMÁTICO DIARIO: Al hacer clic normal, pregunta si quieres registrarla en el diario
             marker.on("click", function() {
-                mostrarDetallesAnomalia(index);
+                setTimeout(function() {
+                    const nota = prompt("¿Quieres guardar esta anomalía (" + p.tipo + ") en tu Diario? Escribe un comentario (o cancela):");
+                    if (nota !== null) {
+                        fetch("/guardar_hallazgo", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                tipo: p.tipo, lat: p.lat, lon: p.lon, rareza: p.rareza, nota: nota
+                            })
+                        }).then(function() { alert("¡Archivado con éxito!"); });
+                    }
+                }, 500);
             });
 
             marcadores.push(marker);
@@ -116,60 +132,11 @@ function generarAnomalias() {
     });
 }
 
-function mostrarDetallesAnomalia(index) {
-    const p = window["anomalia_activa_" + index];
-    const distancia = calcularDistancia(miLat, miLon, p.lat, p.lon);
-    const panel = document.getElementById("diario");
-
-    if (!panel) return;
-
-    panel.style.display = "block";
-    panel.innerHTML = 
-        '<div class="card" style="border-left: 5px solid #00aaff; background:#202c33; padding:15px; border-radius:6px;">' +
-            '<h3 style="margin:0 0 8px 0; color:#00ffaa;">✨ ' + p.tipo + '</h3>' +
-            '<p style="margin:0 0 5px 0;">🎯 <b>Rareza:</b> ' + p.rareza + '%</p>' +
-            '<p style="margin:0 0 15px 0;">📏 <b>Distancia:</b> ' + distancia + ' metros</p>' +
-            '<div style="display:flex; gap:10px;">' +
-                '<button onclick="registrarHallazgoRapido(' + index + ')" style="background:#00ff55; color:#000; flex:1; padding:10px; font-weight:bold; border:none; border-radius:4px; cursor:pointer;">📸 Guardar en Diario</button>' +
-                '<button onclick="abrirEnGoogleMaps(' + p.lat + ',' + p.lon + ')" style="background:#00aaff; color:#fff; flex:1; padding:10px; font-weight:bold; border:none; border-radius:4px; cursor:pointer;">🗺️ Abrir Maps</button>' +
-            '</div>' +
-        '</div>';
-}
-
-function abrirEnGoogleMaps(lat, lon) {
-    // Reconstrucción matemática segura del enlace de Google Maps usando codificación hexadecimal
-    const protocolo = String.fromCharCode(104,116,116,112,115,58,47,47,119,119,119,46,103,111,111,103,108,101,46,99,111,109,47,109,97,112,115,63,113,61);
-    window.open(protocolo + lat + "," + lon, "_blank");
-}
-
-function registrarHallazgoRapido(index) {
-    const objetoAnomalia = window["anomalia_activa_" + index];
-    const notaAventurera = prompt("Escribe una nota para registrar tu hallazgo en Calella:");
-    
-    if (notaAventurera === null) return; 
-
-    fetch("/guardar_hallazgo", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            tipo: objetoAnomalia.tipo,
-            lat: objetoAnomalia.lat,
-            lon: objetoAnomalia.lon,
-            rareza: objetoAnomalia.rareza,
-            nota: notaAventurera
-        })
-    })
-    .then(function() {
-        alert("¡Hallazgo archivado con éxito!");
-        cargarHallazgos();
-    });
-}
-
 function cargarHallazgos() {
     fetch("/hallazgos")
     .then(function(res) { return res.json(); })
     .then(function(datos) {
-        let html = "<h3 style='color:#00ffaa; margin-top:0;'>📜 Historial de Hallazgos</h3>";
+        let html = "";
         datos.forEach(function(h) {
             let titulo = h[1] || "Anomalía";
             let desc = h[2] || "";
@@ -184,7 +151,7 @@ function cargarHallazgos() {
 
         const diario = document.getElementById("diario");
         if (diario) {
-            diario.style.display = "block";
+            diario.style.display = diario.style.display === "block" ? "none" : "block";
             diario.innerHTML = html;
         }
     });
