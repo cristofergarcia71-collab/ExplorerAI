@@ -28,13 +28,12 @@ window.onload = function () {
 
             mapa = L.map("map").setView([miLat, miLon], 15);
 
-            // URL CORRECTA Y COMPLETA DE OPENSTREETMAP
             L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
                 maxZoom: 19,
                 attribution: "&copy; <a href='https://openstreetmap.org'>OpenStreetMap</a> contributors"
             }).addTo(mapa);
 
-            // MEJORA 1: Tu ubicación como un círculo azul brillante
+            // Ubicación como un círculo azul brillante
             marcadorUsuario = L.circleMarker([miLat, miLon], {
                 radius: 10,
                 color: "#ffffff",
@@ -57,7 +56,6 @@ function generarAnomalias() {
             miLat = pos.coords.latitude;
             miLon = pos.coords.longitude;
 
-            // Actualizar la posición visual del usuario por si se ha movido
             if (marcadorUsuario) {
                 marcadorUsuario.setLatLng([miLat, miLon]);
             }
@@ -81,7 +79,7 @@ function generarAnomalias() {
                 let puntosCoordenadas = [[miLat, miLon]];
 
                 datos.forEach(p => {
-                    // MEJORA 2: Definir color y tamaño por rareza
+                    // Colores por rareza
                     let colorAnomalica = "#00ff55"; // Común (Verde)
                     let radioAnomalica = 8;
 
@@ -93,10 +91,9 @@ function generarAnomalias() {
                         radioAnomalica = 11;
                     }
 
-                    // MEJORA 3: Calcular distancia en tiempo real
                     const distancia = calcularDistancia(miLat, miLon, p.lat, p.lon);
 
-                    // Crear anomalía como un círculo coloreado
+                    // Crear círculo coloreado para la anomalía
                     const marker = L.circleMarker([p.lat, p.lon], {
                         radius: radioAnomalica,
                         color: "#ffffff",
@@ -105,7 +102,7 @@ function generarAnomalias() {
                         fillOpacity: 0.9
                     }).addTo(mapa);
 
-                    // URL CORRECTA DE GOOGLE MAPS
+                    // Enlace de Google Maps corregido con plantilla limpia
                     marker.bindPopup(`
                         <b>✨ ${p.tipo}</b><br>
                         🎯 Rareza: ${p.rareza}%<br>
@@ -120,7 +117,7 @@ function generarAnomalias() {
                     puntosCoordenadas.push([p.lat, p.lon]);
                 });
 
-                // MEJORA 8: Zoom automático adaptado a todos los puntos generados
+                // Auto-zoom ajustado
                 if (puntosCoordenadas.length > 1) {
                     mapa.fitBounds(puntosCoordenadas, { padding: [50, 50] });
                 }
@@ -136,11 +133,11 @@ function cargarHallazgos() {
     .then(datos => {
         let html = "";
         datos.forEach(h => {
-            // Mapeo seguro según estructura de lista o diccionario
-            let titulo = h.titulo || h[1] || "Hallazgo";
-            let desc = h.descripcion || h[2] || "";
-            let rareza = h.rareza || h[5] || "??";
-            let tipo = h.tipo || h[6] || "";
+            // Mapeo adaptado tanto para array como para objeto
+            let titulo = h.titulo || (Array.isArray(h) ? h[1] : "Hallazgo");
+            let desc = h.descripcion || (Array.isArray(h) ? h[2] : "");
+            let rareza = h.rareza || (Array.isArray(h) ? h[5] : "??");
+            let tipo = h.tipo || (Array.isArray(h) ? h[6] : "");
 
             html += `
                 <div class="card">
