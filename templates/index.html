@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ExplorerAI</title>
-    <!-- Enlace original y limpio de Leaflet CDN -->
-    <link rel="stylesheet" href="https://cloudflare.com" />
+    <!-- Proveedor seguro inyectado dinámicamente -->
     <style>
         body {
             margin: 0;
@@ -162,9 +161,28 @@
     <div id="map"></div>
     <div id="diario"></div>
 
-    <!-- Scripts CDN alternativos estables de Leaflet -->
-    <script src="https://cloudflare.com"></script>
-    <script src="/static/js/app.js"></script>
+    <!-- Cargador Blindado Inmune a Recortes del Chat -->
+    <script>
+        (function() {
+            var version = "1.9.4";
+            
+            // Inyectar CSS oficial de forma segura
+            var css = document.createElement("link");
+            css.rel = "stylesheet";
+            css.href = "https://cloudflare.com" + version + "/leaflet.css";
+            document.head.appendChild(css);
+
+            // Inyectar JS oficial y encadenar app.js inmediatamente
+            var js = document.createElement("script");
+            js.src = "https://cloudflare.com" + version + "/leaflet.js";
+            js.onload = function() {
+                var app = document.createElement("script");
+                app.src = "/static/js/app.js";
+                document.body.appendChild(app);
+            };
+            document.body.appendChild(js);
+        })();
+    </script>
 
 </body>
 </html>
