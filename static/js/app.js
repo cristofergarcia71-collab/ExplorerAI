@@ -5,9 +5,6 @@ let marcadorPareja = null;
 let miLat = null;
 let miLon = null;
 
-// Configuración de filtro de rango por defecto (metros)
-let radioSeleccionado = 500; 
-
 function calcularDistancia(lat1, lon1, lat2, lon2) {
     const R = 6371000;
     const phi1 = lat1 * Math.PI / 180;
@@ -22,15 +19,6 @@ function calcularDistancia(lat1, lon1, lat2, lon2) {
 }
 
 window.onload = function () {
-    // Escuchar cambios en el nuevo slider de rango dinámico
-    const selectorRadio = document.getElementById("radio-filtro");
-    if (selectorRadio) {
-        selectorRadio.oninput = function() {
-            radioSeleccionado = parseInt(this.value);
-            document.getElementById("valor-radio").innerText = radioSeleccionado + "m";
-        };
-    }
-
     navigator.geolocation.watchPosition(
         function (pos) {
             miLat = pos.coords.latitude;
@@ -70,6 +58,10 @@ window.onload = function () {
 function generarAnomalias() {
     if (!miLat || !miLon) return alert("Esperando señal GPS...");
 
+    // Leer el rango del slider dinámico del HTML
+    const radioSlider = document.getElementById("radio-filtro");
+    const radioMetros = radioSlider ? parseInt(radioSlider.value) : 500;
+
     fetch("/generar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -77,7 +69,7 @@ function generarAnomalias() {
             lat: miLat,
             lon: miLon,
             intencion: document.getElementById("intencion").value,
-            radio: radioSeleccionado // Enviamos el filtro al servidor
+            radio: radioMetros
         })
     })
     .then(function(res) { return res.json(); })
@@ -102,12 +94,12 @@ function generarAnomalias() {
                 radius: radioAnomalica, color: "#ffffff", weight: 1.5, fillColor: colorAnomalica, fillOpacity: 0.9
             }).addTo(mapa);
 
-            // Almacenamos el objeto de la anomalía en memoria para el autoguardado multimedia
             window["anomalia_activa_" + index] = p;
 
-            // URL 100% blindada para navegadores móviles y de escritorio sin bloqueos de redirección
-            const linkGoogleMaps = "https://www.google.com/maps?q=" + p.lat + "," + p.lon; [1.31]
+            // URL estándar limpia para evitar cualquier filtro del navegador
+            const linkGoogleMaps = "https://google.com" + p.lat + "," + p.lon;
 
+            // POPUP CORREGIDO: Sin funciones colgadas de objetivos. Solo el diario y Google Maps estable.
             marker.bindPopup(
                 "<b>✨ " + p.tipo + "</b><br>" +
                 "🎯 Rareza: " + p.rareza + "%<br>" +
@@ -130,7 +122,7 @@ function registrarHallazgoRapido(index) {
     const objetoAnomalia = window["anomalia_activa_" + index];
     const notaAventurera = prompt("Escribe una nota o descripción para registrar tu hallazgo en Calella:");
     
-    if (notaAventurera === null) return; // Cancelado
+    if (notaAventurera === null) return; 
 
     fetch("/guardar_hallazgo", {
         method: "POST",
@@ -159,7 +151,7 @@ function cargarHallazgos() {
             let desc = h[2] || "";
             let rareza = h[5] || "??";
 
-            html += '<div class="card" style="background:#112233; padding:12px; margin:8px 0; border-radius:6px; border-left:5px solid #00ffaa;">' +
+            html += '<div class="card" style="background:#202c33; padding:12px; margin:8px 0; border-radius:6px; border-left:5px solid #00ffaa;">' +
                     '<h3 style="margin:0 0 5px 0; color:#00ff55;">' + titulo + '</h3>' +
                     '<p style="margin:0 0 5px 0; font-size:14px; color:#ccc;">' + desc + '</p>' +
                     '<p style="margin:0; font-size:12px; font-weight:bold; color:#ffaa00;">⭐ Rareza: ' + rareza + '%</p>' +
