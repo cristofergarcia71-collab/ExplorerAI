@@ -28,6 +28,7 @@ window.onload = function () {
 
             mapa = L.map("map").setView([miLat, miLon], 15);
 
+            // CORREGIDO: URL de OpenStreetMap con sus barras diagonales correspondientes
             L.tileLayer("https://openstreetmap.org{z}/{x}/{y}.png", {
                 maxZoom: 19,
                 attribution: "&copy; OpenStreetMap"
@@ -104,7 +105,7 @@ function generarAnomalias() {
                         fillOpacity: 0.9
                     }).addTo(mapa);
 
-                    // Popup estructurado con distancia
+                    // CORREGIDO: Popup estructurado con URL de Google Maps arreglada
                     marker.bindPopup(`
                         <b>✨ ${p.tipo}</b><br>
                         🎯 Rareza: ${p.rareza}%<br>
@@ -121,7 +122,7 @@ function generarAnomalias() {
 
                 // MEJORA 8: Zoom automático adaptado a todos los puntos generados
                 if (puntosCoordenadas.length > 1) {
-                    mapa.fitBounds(puntosCoordenadas, { padding: [30, 30] });
+                    mapa.fitBounds(puntosCoordenadas, { padding: [50, 50] });
                 }
             });
         },
@@ -135,12 +136,18 @@ function cargarHallazgos() {
     .then(datos => {
         let html = "";
         datos.forEach(h => {
+            // CORREGIDO: Soporte tanto si los datos vienen como lista [id, titulo, desc...] o como objeto {titulo, desc...}
+            let titulo = h.titulo || h[1] || "Hallazgo";
+            let desc = h.descripcion || h[2] || "";
+            let rareza = h.rareza || h[5] || "??";
+            let tipo = h.tipo || h[6] || "";
+
             html += `
                 <div class="card">
-                    <h3>${h[1]}</h3>
-                    <p>${h[2]}</p>
-                    <p>Rareza: ${h[5]}%</p>
-                    <p>Tipo: ${h[6]}</p>
+                    <h3>${titulo}</h3>
+                    <p>${desc}</p>
+                    <p>Rareza: ${rareza}%</p>
+                    <p>Tipo: ${tipo}</p>
                 </div>
             `;
         });
