@@ -30,10 +30,10 @@ window.onload = function () {
 
             L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
                 maxZoom: 19,
-                attribution: "&copy; <a href='https://openstreetmap.org'>OpenStreetMap</a> contributors"
+                attribution: "&copy; <a href='https://openstreetmap.org'>OpenStreetMap</a>"
             }).addTo(mapa);
 
-            // Ubicación como un círculo azul brillante
+            // Marcador del usuario (Círculo azul brillante)
             marcadorUsuario = L.circleMarker([miLat, miLon], {
                 radius: 10,
                 color: "#ffffff",
@@ -71,15 +71,15 @@ function generarAnomalias() {
             })
             .then(response => response.json())
             .then(datos => {
-                // Limpiar marcadores viejos
+                // Limpiar marcadores antiguos correctamente
                 marcadores.forEach(marker => mapa.removeLayer(marker));
                 marcadores = [];
 
-                // Array para auto-ajustar el zoom
+                // Guardaremos las posiciones para ajustar el zoom automáticamente
                 let puntosCoordenadas = [[miLat, miLon]];
 
                 datos.forEach(p => {
-                    // Colores por rareza
+                    // Colores y tamaños según el porcentaje de rareza
                     let colorAnomalica = "#00ff55"; // Común (Verde)
                     let radioAnomalica = 8;
 
@@ -93,7 +93,6 @@ function generarAnomalias() {
 
                     const distancia = calcularDistancia(miLat, miLon, p.lat, p.lon);
 
-                    // Crear círculo coloreado para la anomalía
                     const marker = L.circleMarker([p.lat, p.lon], {
                         radius: radioAnomalica,
                         color: "#ffffff",
@@ -102,11 +101,11 @@ function generarAnomalias() {
                         fillOpacity: 0.9
                     }).addTo(mapa);
 
-                    // Enlace de Google Maps corregido con plantilla limpia
+                    // Popup con el enlace corregido a Google Maps externo
                     marker.bindPopup(`
                         <b>✨ ${p.tipo}</b><br>
                         🎯 Rareza: ${p.rareza}%<br>
-                        📏 Distancia: ${distancia} metros<br>
+                        计量 Distancia: ${distancia} metros<br>
                         <small>Lat: ${p.lat}, Lon: ${p.lon}</small><br><br>
                         <a href="https://google.com{p.lat},${p.lon}" target="_blank" style="display:inline-block; margin-top:5px; color:#00aaff;">
                             Abrir en Google Maps
@@ -117,11 +116,12 @@ function generarAnomalias() {
                     puntosCoordenadas.push([p.lat, p.lon]);
                 });
 
-                // Auto-zoom ajustado
+                // Zoom automático para englobar todas las anomalías generadas en Calella
                 if (puntosCoordenadas.length > 1) {
-                    mapa.fitBounds(puntosCoordenadas, { padding: [50, 50] });
+                    mapa.fitBounds(puntosCoordenadas, { padding: [30, 30] });
                 }
-            });
+            })
+            .catch(err => console.error("Error al generar anomalías:", err));
         },
         { enableHighAccuracy: true }
     );
@@ -133,7 +133,7 @@ function cargarHallazgos() {
     .then(datos => {
         let html = "";
         datos.forEach(h => {
-            // Mapeo adaptado tanto para array como para objeto
+            // Mapeo adaptado tanto si tu backend devuelve una lista [] o un objeto {}
             let titulo = h.titulo || (Array.isArray(h) ? h[1] : "Hallazgo");
             let desc = h.descripcion || (Array.isArray(h) ? h[2] : "");
             let rareza = h.rareza || (Array.isArray(h) ? h[5] : "??");
@@ -152,5 +152,6 @@ function cargarHallazgos() {
         const diario = document.getElementById("diario");
         diario.style.display = diario.style.display === "block" ? "none" : "block";
         diario.innerHTML = html;
-    });
+    })
+    .catch(err => console.error("Error al cargar hallazgos:", err));
 }
